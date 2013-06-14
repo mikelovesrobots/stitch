@@ -1,6 +1,7 @@
 _     = require 'underscore'
 async = require 'async'
 fs    = require 'fs'
+nodePath = require 'path'
 
 {extname, join, normalize} = require 'path'
 
@@ -171,17 +172,14 @@ exports.Package = class Package
       callback null, sources
 
   getRelativePath: (path, callback) ->
-    fs.realpath path, (err, sourcePath) =>
-      return callback err if err
+    resolvedPath = nodePath.resolve path
 
-      async.map @paths, fs.realpath, (err, expandedPaths) ->
-        return callback err if err
-
-        for expandedPath in expandedPaths
-          base = expandedPath + "/"
-          if sourcePath.indexOf(base) is 0
-            return callback null, sourcePath.slice base.length
-        callback new Error "#{path} isn't in the require path"
+    for localPath in @paths
+      expandedPath = nodePath.resolve localPath
+      base = expandedPath + "/"
+      if resolvedPath.indexOf(base) is 0
+        return callback null, resolvedPath.slice base.length
+      callback new Error "#{path} isn't in the require path (resolved path '#{resolvedPath}' doesn't include base '#{base}')"
 
   compileFile: (path, callback) ->
     extension = extname(path).slice(1)
