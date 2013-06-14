@@ -17,6 +17,13 @@ try
 catch err
 
 try
+  jade = require 'jade'
+  compilers.jade = (module, filename) ->
+    template = jade.compile fs.readFileSync(filename, 'utf8'), { client: true, compileDebug: false, self: true }
+    module._compile "module.exports = #{template}", filename
+catch err
+
+try
   eco = require 'eco'
   if eco.precompile
     compilers.eco = (module, filename) ->
